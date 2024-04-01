@@ -79,7 +79,20 @@ void shift_rows(unsigned char *block) {
 }
 
 void mix_columns(unsigned char *block) {
-  // TODO: Implement me!
+	unsigned char e, temp;
+  for (int i=0; i<4; i++) {
+		e = block[i][0] ^ block[i][1] ^ block[i][2] ^ block[i][3];
+		temp = block[i][0];
+		block[i][0] ^= e ^ xtime(block[i][0] ^ block[i][1]);
+		block[i][1] ^= e ^ xtime(block[i][1] ^ block[i][2]);
+		block[i][2] ^= e ^ xtime(block[i][2] ^ block[i][3]);
+		block[i][3] ^= e ^ xtime(block[i][3] ^ temp);
+  }
+}
+
+//https://web.archive.org/web/20100626212235/http://cs.ucsb.edu/~koc/cs178/projects/JT/aes.c
+unsigned char xtime(unsigned char x) {
+	return (x & 0x80) ? ((x << 1) ^ 0x1b) : (x<<1);
 }
 
 /*
@@ -116,7 +129,15 @@ void invert_shift_rows(unsigned char *block) {
 }
 
 void invert_mix_columns(unsigned char *block) {
-  // TODO: Implement me!
+  unsigned char u, v;
+  for (int i=0; i<4; i++) {
+	u = xtime(xtime(block[i][0] ^ block[i][2]));
+	v = xtime(xtime(block[i][1] ^ block[i][3]));
+	block[i][0] ^= u;
+	block[i][1] ^= v;
+	block[i][2] ^= u;
+	block[i][3] ^= v;
+  }
 }
 
 /*
