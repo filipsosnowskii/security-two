@@ -43,7 +43,13 @@ const unsigned char inv_s_box[256] = {
     0x60, 0x51, 0x7F, 0xA9, 0x19, 0xB5, 0x4A, 0x0D, 0x2D, 0xE5, 0x7A, 0x9F, 0x93, 0xC9, 0x9C, 0xEF,
     0xA0, 0xE0, 0x3B, 0x4D, 0xAE, 0x2A, 0xF5, 0xB0, 0xC8, 0xEB, 0xBB, 0x3C, 0x83, 0x53, 0x99, 0x61,
     0x17, 0x2B, 0x04, 0x7E, 0xBA, 0x77, 0xD6, 0x26, 0xE1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0C, 0x7D};
-)
+
+const unsigned char r_con[32] = {
+    0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40,
+    0x80, 0x1B, 0x36, 0x6C, 0xD8, 0xAB, 0x4D, 0x9A,
+    0x2F, 0x5E, 0xBC, 0x63, 0xC6, 0x97, 0x35, 0x6A,
+    0xD4, 0xB3, 0x7D, 0xFA, 0xEF, 0xC5, 0x91, 0x39,
+};
 
 /*
  * Operations used when encrypting a block
@@ -144,7 +150,11 @@ void invert_mix_columns(unsigned char *block) {
  * This operation is shared between encryption and decryption
  */
 void add_round_key(unsigned char *block, unsigned char *round_key) {
-  // TODO: Implement me!
+  for (int i=0; i<4; i++) {
+	for (int j=0; j<4; j++) {
+		block[i][j] ^= round_key[i][j];
+	}
+  }
 }
 
 /*
@@ -153,8 +163,44 @@ void add_round_key(unsigned char *block, unsigned char *round_key) {
  * vector, containing the 11 round keys one after the other
  */
 unsigned char *expand_key(unsigned char *cipher_key) {
-  // TODO: Implement me!
-  return 0;
+  //rotate word in first col
+  //then apply sub bytes to first col
+  //then xor with first col and r_con
+  //then to get the next column xor the previous column with the current corresponding one
+  unsigned char keys[176];
+  int i,j;
+  unsigned char word[4];
+  
+  for (i=0; i<16; i++) {
+	keys[i] = cipher_key[i];
+  }
+  
+  for(i=16; i<176; i+=4) {
+	
+	for(j=0; j<4; j++) {
+	  word[j]=keys[i-4+j];
+	}
+	
+	if (i%16==0) {
+	  rotate_word(word);
+	  sub_bytes(word);
+	  word[0] ^= r_con[(i/16)-1];
+	}
+	
+	for (j=0; j<4; j++) {
+	  keys[i + j] = word[j] ^ keys[i - 16 + j];
+	}
+  }
+  
+  return keys;
+}
+
+void rotate_word(unsigned char *key) {
+	unsigned chat temp = key[0];
+	key[0] = key[1];
+	key[1] = key[2];
+	key[2] = key[3];
+	key[3] = temp;
 }
 
 /*
