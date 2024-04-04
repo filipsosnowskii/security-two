@@ -55,11 +55,12 @@ const unsigned char r_con[32] = {
  * Operations used when encrypting a block
  */
 void sub_bytes(unsigned char *block) {
-  for (int i=0; i<4; i++) { 
-	for (int j=0; j<4; j++) {
-		block[i][j] = s_box(block[i][j]);
-	}
-  }
+//  for (int i=0; i<4; i++) { 
+//	for (int j=0; j<4; j++) {
+//		block[i][j] = s_box(block[i][j]);
+//	}
+//  }
+  for (int i=0; i<16; i++) block[i] = s_box[block[i]];
 }
 
 void shift_rows(unsigned char *block) {
@@ -150,10 +151,13 @@ void invert_mix_columns(unsigned char *block) {
  * This operation is shared between encryption and decryption
  */
 void add_round_key(unsigned char *block, unsigned char *round_key) {
-  for (int i=0; i<4; i++) {
+/*  for (int i=0; i<4; i++) {
 	for (int j=0; j<4; j++) {
 		block[i][j] ^= round_key[i][j];
 	}
+  }*/
+  for (int i=0; i<16; i++) {
+	  block[i] ^= round_key[i];
   }
 }
 
@@ -203,6 +207,33 @@ void rotate_word(unsigned char *key) {
 	key[3] = temp;
 }
 
+unsigned char* convertBytesToMatrix(unsigned char* text) {
+	unsigned char convertedMatrix[4][4];
+	
+//	if (sizeof(text)/sizeof(text[0]) != 16) {
+//		return null;
+//	}
+	
+	for (int i=0; i<4; i++) {
+		for (int j=0; j<4; j++) {
+			convertBytesToMatrix[j][i] = text[i*4 +j];
+		}
+	}
+	
+	return convertBytesToMatrix;
+} //TODO: is this needed?
+//TODO: replace 16 w block-size in functions, make 2d functions 1d, fix r_con
+
+unsigned char* getRoundKey(unsigned char* keys, int round) {
+	unsigned char roundKey[16];
+	
+	for (int i=0; i<16; i++) {
+		roundKey[i] = keys[(16*i) + i];
+	}
+	
+	return roundKey;
+}
+
 /*
  * The implementations of the functions declared in the
  * header file should go here
@@ -211,6 +242,26 @@ unsigned char *aes_encrypt_block(unsigned char *plaintext, unsigned char *key) {
   // TODO: Implement me!
   unsigned char *output =
       (unsigned char *)malloc(sizeof(unsigned char) * BLOCK_SIZE);
+	  
+  //unsigned char *plainBlock = convertBytesToMatrix(plaintext);
+  
+  add_round_key(plaintext, getRoundKey(key, 0));
+  
+  for (int round=1; round<10; round++) {
+	  sub_bytes(plaintext);
+	  shift_rows(plaintext);
+	  mix_columns(plaintext);
+	  add_round_key(plaintext, getRoundKey(key, round));
+  }
+  
+  sub_bytes(plaintext);
+  shift_rows(plaintext);
+  add_round_key(plaintext, 10);
+  
+  for (int i=0; i<BLOCK_SIZE; i++) {
+	  output[i] = plaintext[i];
+  }
+
   return output;
 }
 
@@ -219,5 +270,23 @@ unsigned char *aes_decrypt_block(unsigned char *ciphertext,
   // TODO: Implement me!
   unsigned char *output =
       (unsigned char *)malloc(sizeof(unsigned char) * BLOCK_SIZE);
+	  
+  add_round_key(plaintext, getRoundKey(key, 10));
+  invert_shift_rows(plaintext);
+  invert_sub_bytes(plaintext);
+  
+  for (int round=9; round>0; round--) {
+	  add_round_key(plaintext, getRoundKey(key, round));
+	  invert_mix_columns(plaintext);
+	  invert_shift_rows(plaintext);
+	  invert_sub_bytes(plaintext);
+  }
+  
+  add_round_key(plaintext, 0);
+  
+  for (int i=0; i<BLOCK_SIZE; i++) {
+	  output[i] = plaintext[i];
+  }
+
   return output;
 }
