@@ -60,40 +60,61 @@ void sub_bytes(unsigned char *block) {
 //		block[i][j] = s_box(block[i][j]);
 //	}
 //  }
-  for (int i=0; i<16; i++) block[i] = s_box[block[i]];
+  for (int i=0; i<16; i++) {
+    block[i] = s_box[block[i]];
+  }
 }
 
 void shift_rows(unsigned char *block) {
   //shift row 1
-  unsigned char temp = block[1][0];
-  block[1][0] = block[1][1];
-  block[1][1] = block[1][2];
-  block[1][2] = block[1][3];
-  block[1][3] = temp;
+  unsigned char temp = block[4];
+  block[4] = block[5];
+  block[5] = block[6];
+  block[6] = block[7];
+  block[7] = temp;
   //shift row 2
-  temp = block[2][0];
-  block[2][0] = block[2][2];
-  block[2][2] = temp;
-  temp = block[2][1];
-  block[2][1] = block[2][3];
-  block[2][3] = temp;
+  temp = block[8];
+  block[8] = block[10];
+  block[10] = temp;
+  temp = block[9];
+  block[9] = block[11];
+  block[11] = temp;
   //shift row 3
-  temp = block[3][0];
-  block[3][0] = block[3][3];
-  block[3][3] = block[3][2];
-  block[3][2] = block[3][1];
-  block[3][1] = temp;  
+  temp = block[12];
+  block[12] = block[15];
+  block[15] = block[14];
+  block[14] = block[13];
+  block[13] = temp;
+
+  // unsigned char temp = block[1][0];
+  // block[1][0] = block[1][1];
+  // block[1][1] = block[1][2];
+  // block[1][2] = block[1][3];
+  // block[1][3] = temp;
+  // //shift row 2
+  // temp = block[2][0];
+  // block[2][0] = block[2][2];
+  // block[2][2] = temp;
+  // temp = block[2][1];
+  // block[2][1] = block[2][3];
+  // block[2][3] = temp;
+  // //shift row 3
+  // temp = block[3][0];
+  // block[3][0] = block[3][3];
+  // block[3][3] = block[3][2];
+  // block[3][2] = block[3][1];
+  // block[3][1] = temp;  
 }
 
 void mix_columns(unsigned char *block) {
 	unsigned char e, temp;
   for (int i=0; i<4; i++) {
-		e = block[i][0] ^ block[i][1] ^ block[i][2] ^ block[i][3];
-		temp = block[i][0];
-		block[i][0] ^= e ^ xtime(block[i][0] ^ block[i][1]);
-		block[i][1] ^= e ^ xtime(block[i][1] ^ block[i][2]);
-		block[i][2] ^= e ^ xtime(block[i][2] ^ block[i][3]);
-		block[i][3] ^= e ^ xtime(block[i][3] ^ temp);
+		e = block[i*4] ^ block[(i*4) + 1] ^ block[(i*4) + 2] ^ block[(i*4) + 3];
+		temp = block[i*4];
+		block[i*4] ^= e ^ xtime(block[i*4] ^ block[(i*4) + 1]);
+		block[(i*4) + 1] ^= e ^ xtime(block[(i*4) + 1] ^ block[(i*4) + 2]);
+		block[(i*4) + 2] ^= e ^ xtime(block[(i*4) + 2] ^ block[(i*4) + 3]);
+		block[(i*4) + 3] ^= e ^ xtime(block[(i*4) + 3] ^ temp);
   }
 }
 
@@ -106,44 +127,42 @@ unsigned char xtime(unsigned char x) {
  * Operations used when decrypting a block
  */
 void invert_sub_bytes(unsigned char *block) {
-  for (int i=0; i<4; i++) { 
-	for (int j=0; j<4; j++) {
-		block[i][j] = s_box(block[i][j]);
-	}
+  for (int i=0; i<16; i++) {
+    block[i] = inv_s_box[block[i]];
   }
 }
 
 void invert_shift_rows(unsigned char *block) {
   //shift row 1
-  unsigned char temp = block[1][2];
-  block[1][0] = block[1][3];
-  block[1][1] = block[1][0];
-  block[1][2] = block[1][1];
-  block[1][3] = temp;
+  unsigned char temp = block[7];
+  block[7] = block[6];
+  block[6] = block[5];
+  block[5] = block[4];
+  block[4] = temp;
   //shift row 2
-  temp = block[2][0];
-  block[2][0] = block[2][2];
-  block[2][2] = temp;
-  temp = block[2][1];
-  block[2][1] = block[2][3];
-  block[2][3] = temp;
+  temp = block[8];
+  block[8] = block[10];
+  block[10] = temp;
+  temp = block[9];
+  block[9] = block[11];
+  block[11] = temp;
   //shift row 3
-  temp = block[3][0];
-  block[3][0] = block[3][1];
-  block[3][1] = block[3][2];
-  block[3][2] = block[3][3];
-  block[3][3] = temp; 
+  temp = block[12];
+  block[12] = block[13];
+  block[13] = block[14];
+  block[14] = block[15];
+  block[15] = temp; 
 }
 
 void invert_mix_columns(unsigned char *block) {
   unsigned char u, v;
   for (int i=0; i<4; i++) {
-	u = xtime(xtime(block[i][0] ^ block[i][2]));
-	v = xtime(xtime(block[i][1] ^ block[i][3]));
-	block[i][0] ^= u;
-	block[i][1] ^= v;
-	block[i][2] ^= u;
-	block[i][3] ^= v;
+	u = xtime(xtime(block[(i*4)] ^ block[(i*4) + 2]));
+	v = xtime(xtime(block[(i*4) + 1] ^ block[(i*4) + 3]));
+	block[(i*4)] ^= u;
+	block[(i*4) + 1] ^= v;
+	block[(i*4) + 2] ^= u;
+	block[(i*4) + 3] ^= v;
   }
 }
 
@@ -200,7 +219,7 @@ unsigned char *expand_key(unsigned char *cipher_key) {
 }
 
 void rotate_word(unsigned char *key) {
-	unsigned chat temp = key[0];
+	unsigned char temp = key[0];
 	key[0] = key[1];
 	key[1] = key[2];
 	key[2] = key[3];
@@ -216,11 +235,11 @@ unsigned char* convertBytesToMatrix(unsigned char* text) {
 	
 	for (int i=0; i<4; i++) {
 		for (int j=0; j<4; j++) {
-			convertBytesToMatrix[j][i] = text[i*4 +j];
+			convertedMatrix[j][i] = text[i*4 +j];
 		}
 	}
 	
-	return convertBytesToMatrix;
+	return convertedMatrix;
 } //TODO: is this needed?
 //TODO: replace 16 w block-size in functions, make 2d functions 1d, fix r_con
 
@@ -271,21 +290,21 @@ unsigned char *aes_decrypt_block(unsigned char *ciphertext,
   unsigned char *output =
       (unsigned char *)malloc(sizeof(unsigned char) * BLOCK_SIZE);
 	  
-  add_round_key(plaintext, getRoundKey(key, 10));
-  invert_shift_rows(plaintext);
-  invert_sub_bytes(plaintext);
+  add_round_key(ciphertext, getRoundKey(key, 10));
+  invert_shift_rows(ciphertext);
+  invert_sub_bytes(ciphertext);
   
   for (int round=9; round>0; round--) {
-	  add_round_key(plaintext, getRoundKey(key, round));
-	  invert_mix_columns(plaintext);
-	  invert_shift_rows(plaintext);
-	  invert_sub_bytes(plaintext);
+	  add_round_key(ciphertext, getRoundKey(key, round));
+	  invert_mix_columns(ciphertext);
+	  invert_shift_rows(ciphertext);
+	  invert_sub_bytes(ciphertext);
   }
   
-  add_round_key(plaintext, 0);
+  add_round_key(ciphertext, 0);
   
   for (int i=0; i<BLOCK_SIZE; i++) {
-	  output[i] = plaintext[i];
+	  output[i] = ciphertext[i];
   }
 
   return output;
