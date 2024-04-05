@@ -106,6 +106,11 @@ void shift_rows(unsigned char *block) {
   // block[3][1] = temp;  
 }
 
+//https://web.archive.org/web/20100626212235/http://cs.ucsb.edu/~koc/cs178/projects/JT/aes.c
+unsigned char xtime(unsigned char x) {
+	return (x & 0x80) ? ((x << 1) ^ 0x1b) : (x<<1);
+}
+
 void mix_columns(unsigned char *block) {
 	unsigned char e, temp;
   for (int i=0; i<4; i++) {
@@ -116,11 +121,6 @@ void mix_columns(unsigned char *block) {
 		block[(i*4) + 2] ^= e ^ xtime(block[(i*4) + 2] ^ block[(i*4) + 3]);
 		block[(i*4) + 3] ^= e ^ xtime(block[(i*4) + 3] ^ temp);
   }
-}
-
-//https://web.archive.org/web/20100626212235/http://cs.ucsb.edu/~koc/cs178/projects/JT/aes.c
-unsigned char xtime(unsigned char x) {
-	return (x & 0x80) ? ((x << 1) ^ 0x1b) : (x<<1);
 }
 
 /*
@@ -180,6 +180,14 @@ void add_round_key(unsigned char *block, unsigned char *round_key) {
   }
 }
 
+void rotate_word(unsigned char *key) {
+	unsigned char temp = key[0];
+	key[0] = key[1];
+	key[1] = key[2];
+	key[2] = key[3];
+	key[3] = temp;
+}
+
 /*
  * This function should expand the round key. Given an input,
  * which is a single 128-bit key, it should return a 176-byte
@@ -215,15 +223,7 @@ unsigned char *expand_key(unsigned char *cipher_key) {
 	}
   }
   
-  return keys;
-}
-
-void rotate_word(unsigned char *key) {
-	unsigned char temp = key[0];
-	key[0] = key[1];
-	key[1] = key[2];
-	key[2] = key[3];
-	key[3] = temp;
+  return *keys;
 }
 
 unsigned char* convertBytesToMatrix(unsigned char* text) {
@@ -250,7 +250,7 @@ unsigned char* getRoundKey(unsigned char* keys, int round) {
 		roundKey[i] = keys[(16*i) + i];
 	}
 	
-	return roundKey;
+	return *roundKey;
 }
 
 /*
@@ -275,7 +275,7 @@ unsigned char *aes_encrypt_block(unsigned char *plaintext, unsigned char *key) {
   
   sub_bytes(plaintext);
   shift_rows(plaintext);
-  add_round_key(plaintext, 10);
+  add_round_key(plaintext, getRoundKey(key, 10));
   
   for (int i=0; i<BLOCK_SIZE; i++) {
 	  output[i] = plaintext[i];
@@ -301,7 +301,7 @@ unsigned char *aes_decrypt_block(unsigned char *ciphertext,
 	  invert_sub_bytes(ciphertext);
   }
   
-  add_round_key(ciphertext, 0);
+  add_round_key(ciphertext, getRoundKey(key, 0));
   
   for (int i=0; i<BLOCK_SIZE; i++) {
 	  output[i] = ciphertext[i];
