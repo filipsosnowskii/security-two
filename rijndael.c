@@ -208,22 +208,22 @@ unsigned char *expand_key(unsigned char *cipher_key) {
   
   for(i=16; i<176; i+=4) {
 	
-	for(j=0; j<4; j++) {
-	  word[j]=keys[i-4+j];
-	}
+	  for(j=0; j<4; j++) {
+	    word[j]=keys[i-4+j];
+	  }
 	
-	if (i%16==0) {
-	  rotate_word(word);
-	  sub_bytes(word);
-	  word[0] ^= r_con[(i/16)-1];
-	}
+	  if (i%16==0) {
+	    rotate_word(word);
+	    sub_bytes(word);
+	    word[0] ^= r_con[(i/16)-1];
+	  }
 	
-	for (j=0; j<4; j++) {
-	  keys[i + j] = word[j] ^ keys[i - 16 + j];
-	}
+	  for (j=0; j<4; j++) {
+	    keys[i + j] = word[j] ^ keys[i - 16 + j];
+	  }
   }
   
-  return *keys;
+  return keys;
 }
 
 unsigned char* convertBytesToMatrix(unsigned char* text) {
@@ -250,7 +250,7 @@ unsigned char* getRoundKey(unsigned char* keys, int round) {
 		roundKey[i] = keys[(16*i) + i];
 	}
 	
-	return *roundKey;
+	return roundKey;
 }
 
 /*
