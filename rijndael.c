@@ -3,10 +3,10 @@
  *       a brief description of this code.
  */
 
-#include <stdlib.h>
-// TODO: Any other files you need to include should go here
-
 #include "rijndael.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
 const unsigned char s_box[256] = {
     0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
@@ -44,11 +44,8 @@ const unsigned char inv_s_box[256] = {
     0xA0, 0xE0, 0x3B, 0x4D, 0xAE, 0x2A, 0xF5, 0xB0, 0xC8, 0xEB, 0xBB, 0x3C, 0x83, 0x53, 0x99, 0x61,
     0x17, 0x2B, 0x04, 0x7E, 0xBA, 0x77, 0xD6, 0x26, 0xE1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0C, 0x7D};
 
-const unsigned char r_con[32] = {
-    0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40,
-    0x80, 0x1B, 0x36, 0x6C, 0xD8, 0xAB, 0x4D, 0x9A,
-    0x2F, 0x5E, 0xBC, 0x63, 0xC6, 0x97, 0x35, 0x6A,
-    0xD4, 0xB3, 0x7D, 0xFA, 0xEF, 0xC5, 0x91, 0x39,
+const unsigned char r_con [] = {
+0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab
 };
 
 /*
@@ -60,7 +57,7 @@ void sub_bytes(unsigned char *block) {
 //		block[i][j] = s_box(block[i][j]);
 //	}
 //  }
-  for (int i=0; i<16; i++) {
+  for (int i=0; i<BLOCK_SIZE; i++) {
     block[i] = s_box[block[i]];
   }
 }
@@ -127,7 +124,7 @@ void mix_columns(unsigned char *block) {
  * Operations used when decrypting a block
  */
 void invert_sub_bytes(unsigned char *block) {
-  for (int i=0; i<16; i++) {
+  for (int i=0; i<BLOCK_SIZE; i++) {
     block[i] = inv_s_box[block[i]];
   }
 }
@@ -157,12 +154,12 @@ void invert_shift_rows(unsigned char *block) {
 void invert_mix_columns(unsigned char *block) {
   unsigned char u, v;
   for (int i=0; i<4; i++) {
-	u = xtime(xtime(block[(i*4)] ^ block[(i*4) + 2]));
-	v = xtime(xtime(block[(i*4) + 1] ^ block[(i*4) + 3]));
-	block[(i*4)] ^= u;
-	block[(i*4) + 1] ^= v;
-	block[(i*4) + 2] ^= u;
-	block[(i*4) + 3] ^= v;
+	  u = xtime(xtime(block[(i*4)] ^ block[(i*4) + 2]));
+	  v = xtime(xtime(block[(i*4) + 1] ^ block[(i*4) + 3]));
+	  block[(i*4)] ^= u;
+	  block[(i*4) + 1] ^= v;
+	  block[(i*4) + 2] ^= u;
+	  block[(i*4) + 3] ^= v;
   }
 }
 
@@ -175,7 +172,7 @@ void add_round_key(unsigned char *block, unsigned char *round_key) {
 		block[i][j] ^= round_key[i][j];
 	}
   }*/
-  for (int i=0; i<16; i++) {
+  for (int i=0; i<BLOCK_SIZE; i++) {
 	  block[i] ^= round_key[i];
   }
 }
@@ -198,56 +195,44 @@ unsigned char *expand_key(unsigned char *cipher_key) {
   //then apply sub bytes to first col
   //then xor with first col and r_con
   //then to get the next column xor the previous column with the current corresponding one
+  unsigned char *output =
+      (unsigned char *)malloc(sizeof(unsigned char) * 176);
   unsigned char keys[176];
   int i,j;
   unsigned char word[4];
-  
-  for (i=0; i<16; i++) {
-	keys[i] = cipher_key[i];
+
+  for (i=0; i<BLOCK_SIZE; i++) {
+	  keys[i] = cipher_key[i];
   }
-  
-  for(i=16; i<176; i+=4) {
-	
+
+  for(i=BLOCK_SIZE; i<176; i+=4) {
 	  for(j=0; j<4; j++) {
 	    word[j]=keys[i-4+j];
 	  }
-	
-	  if (i%16==0) {
+
+	  if (i%BLOCK_SIZE==0) {
 	    rotate_word(word);
 	    sub_bytes(word);
-	    word[0] ^= r_con[(i/16)-1];
+	    word[0] ^= r_con[(i/BLOCK_SIZE)-1];
 	  }
-	
+    
 	  for (j=0; j<4; j++) {
-	    keys[i + j] = word[j] ^ keys[i - 16 + j];
+	    keys[i + j] = word[j] ^ keys[i - BLOCK_SIZE + j];
 	  }
   }
-  
-  return keys;
+
+  memcpy(output, keys, 176);
+
+  return output;
 }
 
-unsigned char* convertBytesToMatrix(unsigned char* text) {
-	unsigned char convertedMatrix[4][4];
-	
-//	if (sizeof(text)/sizeof(text[0]) != 16) {
-//		return null;
-//	}
-	
-	for (int i=0; i<4; i++) {
-		for (int j=0; j<4; j++) {
-			convertedMatrix[j][i] = text[i*4 +j];
-		}
-	}
-	
-	return convertedMatrix;
-} //TODO: is this needed?
-//TODO: replace 16 w block-size in functions, make 2d functions 1d, fix r_con
-
 unsigned char* getRoundKey(unsigned char* keys, int round) {
-	unsigned char roundKey[16];
+  unsigned char *roundKey =
+      (unsigned char *)malloc(sizeof(unsigned char) * BLOCK_SIZE);
+	// unsigned char roundKey[16];
 	
-	for (int i=0; i<16; i++) {
-		roundKey[i] = keys[(16*i) + i];
+	for (int i=0; i<BLOCK_SIZE; i++) {
+		roundKey[i] = keys[(BLOCK_SIZE*round) + i];
 	}
 	
 	return roundKey;
@@ -261,51 +246,89 @@ unsigned char *aes_encrypt_block(unsigned char *plaintext, unsigned char *key) {
   // TODO: Implement me!
   unsigned char *output =
       (unsigned char *)malloc(sizeof(unsigned char) * BLOCK_SIZE);
-	  
+
+  unsigned char *expanded_key = expand_key(key);
+
+  // unsigned char temp[BLOCK_SIZE];
+  // for (int i=0; i<BLOCK_SIZE; i++) temp[i] = plaintext[i];
+
   //unsigned char *plainBlock = convertBytesToMatrix(plaintext);
-  
   add_round_key(plaintext, getRoundKey(key, 0));
+
   
   for (int round=1; round<10; round++) {
 	  sub_bytes(plaintext);
 	  shift_rows(plaintext);
 	  mix_columns(plaintext);
-	  add_round_key(plaintext, getRoundKey(key, round));
+	  add_round_key(plaintext, getRoundKey(expanded_key, round));
   }
   
   sub_bytes(plaintext);
   shift_rows(plaintext);
-  add_round_key(plaintext, getRoundKey(key, 10));
+  add_round_key(plaintext, getRoundKey(expanded_key, 10));
   
-  for (int i=0; i<BLOCK_SIZE; i++) {
-	  output[i] = plaintext[i];
-  }
 
+  memcpy(output, plaintext, BLOCK_SIZE);
+
+  for (int i=0; i<BLOCK_SIZE; i++) {
+	  // output[i] = plaintext[i];
+    printf("%02X ", output[i]);
+  }
+  printf("%ld %x\n", output, output);
   return output;
 }
-
+//TODO: Fix decrypt
 unsigned char *aes_decrypt_block(unsigned char *ciphertext,
                                  unsigned char *key) {
   // TODO: Implement me!
   unsigned char *output =
       (unsigned char *)malloc(sizeof(unsigned char) * BLOCK_SIZE);
-	  
-  add_round_key(ciphertext, getRoundKey(key, 10));
+	
+  unsigned char *expanded_key = expand_key(key);
+
+  add_round_key(ciphertext, getRoundKey(expanded_key, 10));
   invert_shift_rows(ciphertext);
   invert_sub_bytes(ciphertext);
   
   for (int round=9; round>0; round--) {
-	  add_round_key(ciphertext, getRoundKey(key, round));
+	  add_round_key(ciphertext, getRoundKey(expanded_key, round));
 	  invert_mix_columns(ciphertext);
 	  invert_shift_rows(ciphertext);
 	  invert_sub_bytes(ciphertext);
   }
   
-  add_round_key(ciphertext, getRoundKey(key, 0));
+  add_round_key(ciphertext, getRoundKey(expanded_key, 0));
   
-  for (int i=0; i<BLOCK_SIZE; i++) {
-	  output[i] = ciphertext[i];
-  }
+  memcpy(output, ciphertext, BLOCK_SIZE);
+
+  // for (int i=0; i<BLOCK_SIZE; i++) {
+	//   output[i] = ciphertext[i];
+  // }
 
   return output;
 }
+
+// int main() {
+//   unsigned char key[16] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 
+// 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F };
+// unsigned char text[16] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 
+// 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F };
+//   for (int i=0; i<BLOCK_SIZE; i++) {
+//     printf("%02X ", text[i]);
+//   }
+//   printf("\n");
+// unsigned char *eanswer = aes_encrypt_block(text, key);
+//   // for (int i=0; i<BLOCK_SIZE; i++) {
+//   //   printf("%02X ", eanswer[i]);
+//   // }
+//    printf("\n");
+// unsigned char *answer = aes_decrypt_block(eanswer, key);
+//   for (int i=0; i<BLOCK_SIZE; i++) {
+//     printf("%02X ", answer[i]);
+//   }
+//   printf("\n");
+// // for (int i=0; 1<16; i++) {
+// //   printf("%02X", answer[i]);
+// // }
+// return 0;
+// }
