@@ -175,7 +175,6 @@ unsigned char *expand_key(unsigned char *cipher_key) {
 
   for (i=0; i<BLOCK_SIZE; i++) {
 	  keys[i] = cipher_key[i];
-    // printf("%02X %02X ", keys[i], cipher_key[i]); //remove later
   }
 
   for(i=BLOCK_SIZE; i<176; i+=4) {
@@ -190,32 +189,17 @@ unsigned char *expand_key(unsigned char *cipher_key) {
 	  }
 
 	  for (j=0; j<4; j++) {
-      // printf("%d ", (i+j));
 	    keys[i + j] = word[j] ^ keys[i - BLOCK_SIZE + j];
-      //TODO: check if you're xoring the correct key position
 	  }
-  // for (i=0; i<BLOCK_SIZE; i++) {
-  //   printf("%02X %02X ", keys[i], cipher_key[i]); //remove later
-  // }
-    // printf("\n");
   }
 
+  /*The above code has a bug where the original key in the first 
+  16 indices gets overwritten, this loop works around that*/
   for (i=0; i<BLOCK_SIZE; i++) {
     keys[i] = cipher_key[i];
-    // printf("%02X %02X ", keys[i], cipher_key[i]); //remove later
   }
 
   memcpy(output, keys, 176);
-
-  for(int j=0; j<11; j++) {
-  // printf("key");
-  // for (int i=0; i<BLOCK_SIZE; i++) {
-	  // output[i] = plaintext[i];
-    // printf("%02X ", output[(j*BLOCK_SIZE) + i]);
-  // }
-  //TODO: first key is wrong
-  // printf("\n");
-}
 
   return output;
 }
@@ -223,7 +207,6 @@ unsigned char *expand_key(unsigned char *cipher_key) {
 unsigned char* getRoundKey(unsigned char* keys, int round) {
   unsigned char *roundKey =
       (unsigned char *)malloc(sizeof(unsigned char) * BLOCK_SIZE);
-	// unsigned char roundKey[16];
 	
 	for (int i=0; i<BLOCK_SIZE; i++) {
 		roundKey[i] = keys[(BLOCK_SIZE*round) + i];
@@ -237,18 +220,12 @@ unsigned char* getRoundKey(unsigned char* keys, int round) {
  * header file should go here
  */
 unsigned char *aes_encrypt_block(unsigned char *plaintext, unsigned char *key) {
-  // TODO: Implement me!
   unsigned char *output =
       (unsigned char *)malloc(sizeof(unsigned char) * BLOCK_SIZE);
 
   unsigned char *expanded_key = expand_key(key);
 
-  // unsigned char temp[BLOCK_SIZE];
-  // for (int i=0; i<BLOCK_SIZE; i++) temp[i] = plaintext[i];
-
-  //unsigned char *plainBlock = convertBytesToMatrix(plaintext);
   add_round_key(plaintext, getRoundKey(key, 0));
-
   
   for (int round=1; round<10; round++) {
 	  sub_bytes(plaintext);
@@ -260,21 +237,14 @@ unsigned char *aes_encrypt_block(unsigned char *plaintext, unsigned char *key) {
   sub_bytes(plaintext);
   shift_rows(plaintext);
   add_round_key(plaintext, getRoundKey(expanded_key, 10));
-  
 
   memcpy(output, plaintext, BLOCK_SIZE);
 
-  for (int i=0; i<BLOCK_SIZE; i++) {
-	  // output[i] = plaintext[i];
-    printf("%02X ", output[i]);
-  }
-  printf("%ld %x ", output, output);
   return output;
 }
-//TODO: Fix decrypt
+
 unsigned char *aes_decrypt_block(unsigned char *ciphertext,
                                  unsigned char *key) {
-  // TODO: Implement me!
   unsigned char *output =
       (unsigned char *)malloc(sizeof(unsigned char) * BLOCK_SIZE);
 	
@@ -295,34 +265,27 @@ unsigned char *aes_decrypt_block(unsigned char *ciphertext,
   
   memcpy(output, ciphertext, BLOCK_SIZE);
 
-  // for (int i=0; i<BLOCK_SIZE; i++) {
-	//   output[i] = ciphertext[i];
-  // }
-
   return output;
 }
 
-int main() {
-  unsigned char key[16] = {0x00, 0x01, 0x92, 0x03, 0x04, 0x05, 0x06, 0x07, 
-0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x9D, 0x0E, 0x0F };
-unsigned char text[16] = {0x0E, 0x01, 0x32, 0x03, 0x04, 0x05, 0x06, 0x07, 
-0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x1D, 0xEE, 0x0F };
-  for (int i=0; i<BLOCK_SIZE; i++) {
-    printf("%02X ", text[i]);
-  }
-  printf("\n");
-unsigned char *eanswer = aes_encrypt_block(text, key);
-  // for (int i=0; i<BLOCK_SIZE; i++) {
-  //   printf("%02X ", eanswer[i]);
-  // }
-   printf("\n");
-unsigned char *answer = aes_decrypt_block(eanswer, key);
-  for (int i=0; i<BLOCK_SIZE; i++) {
-    printf("%02X ", answer[i]);
-  }
-  printf("\n");
-// for (int i=0; 1<16; i++) {
-//   printf("%02X", answer[i]);
+// int main() {
+//  unsigned char key[16] = {0x00, 0x01, 0x92, 0x03, 0x04, 0x05, 0x06, 0x07, 
+//   0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x9D, 0x0E, 0x0F };
+// unsigned char text[16] = {0x0E, 0x01, 0x32, 0x03, 0x04, 0x05, 0x06, 0x07, 
+//   0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x1D, 0xEE, 0x0F };
+// for (int i=0; i<BLOCK_SIZE; i++) {
+//   printf("%02X ", text[i]);
 // }
-return 0;
-}
+// printf("\n");
+// unsigned char *eanswer = aes_encrypt_block(text, key);
+// for (int i=0; i<BLOCK_SIZE; i++) {
+//   printf("%02X ", eanswer[i]);
+// }
+// printf("\n");
+// unsigned char *answer = aes_decrypt_block(eanswer, key);
+// for (int i=0; i<BLOCK_SIZE; i++) {
+//   printf("%02X ", answer[i]);
+// }
+// printf("\n");
+// return 0;
+// }
