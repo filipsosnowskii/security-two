@@ -10,7 +10,7 @@ jobs:
         run: |
           sudo apt install -y build-essential python-is-python3
           make
-          cd ./aes
-          pip -e
-          cd ..
+      - name: Run Python tests
+        run:
+          pip install ./aes        
           python -u tests.py
