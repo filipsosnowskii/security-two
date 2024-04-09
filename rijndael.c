@@ -52,11 +52,6 @@ const unsigned char r_con [] = {
  * Operations used when encrypting a block
  */
 void sub_bytes(unsigned char *block) {
-//  for (int i=0; i<4; i++) { 
-//	for (int j=0; j<4; j++) {
-//		block[i][j] = s_box(block[i][j]);
-//	}
-//  }
   for (int i=0; i<BLOCK_SIZE; i++) {
     block[i] = s_box[block[i]];
   }
@@ -82,25 +77,6 @@ void shift_rows(unsigned char *block) {
   block[15] = block[14];
   block[14] = block[13];
   block[13] = temp;
-
-  // unsigned char temp = block[1][0];
-  // block[1][0] = block[1][1];
-  // block[1][1] = block[1][2];
-  // block[1][2] = block[1][3];
-  // block[1][3] = temp;
-  // //shift row 2
-  // temp = block[2][0];
-  // block[2][0] = block[2][2];
-  // block[2][2] = temp;
-  // temp = block[2][1];
-  // block[2][1] = block[2][3];
-  // block[2][3] = temp;
-  // //shift row 3
-  // temp = block[3][0];
-  // block[3][0] = block[3][3];
-  // block[3][3] = block[3][2];
-  // block[3][2] = block[3][1];
-  // block[3][1] = temp;  
 }
 
 //https://web.archive.org/web/20100626212235/http://cs.ucsb.edu/~koc/cs178/projects/JT/aes.c
@@ -161,17 +137,13 @@ void invert_mix_columns(unsigned char *block) {
 	  block[(i*4) + 2] ^= u;
 	  block[(i*4) + 3] ^= v;
   }
+  mix_columns(block);
 }
 
 /*
  * This operation is shared between encryption and decryption
  */
 void add_round_key(unsigned char *block, unsigned char *round_key) {
-/*  for (int i=0; i<4; i++) {
-	for (int j=0; j<4; j++) {
-		block[i][j] ^= round_key[i][j];
-	}
-  }*/
   for (int i=0; i<BLOCK_SIZE; i++) {
 	  block[i] ^= round_key[i];
   }
@@ -203,6 +175,7 @@ unsigned char *expand_key(unsigned char *cipher_key) {
 
   for (i=0; i<BLOCK_SIZE; i++) {
 	  keys[i] = cipher_key[i];
+    // printf("%02X %02X ", keys[i], cipher_key[i]); //remove later
   }
 
   for(i=BLOCK_SIZE; i<176; i+=4) {
@@ -215,13 +188,34 @@ unsigned char *expand_key(unsigned char *cipher_key) {
 	    sub_bytes(word);
 	    word[0] ^= r_con[(i/BLOCK_SIZE)-1];
 	  }
-    
+
 	  for (j=0; j<4; j++) {
+      // printf("%d ", (i+j));
 	    keys[i + j] = word[j] ^ keys[i - BLOCK_SIZE + j];
+      //TODO: check if you're xoring the correct key position
 	  }
+  // for (i=0; i<BLOCK_SIZE; i++) {
+  //   printf("%02X %02X ", keys[i], cipher_key[i]); //remove later
+  // }
+    // printf("\n");
+  }
+
+  for (i=0; i<BLOCK_SIZE; i++) {
+    keys[i] = cipher_key[i];
+    // printf("%02X %02X ", keys[i], cipher_key[i]); //remove later
   }
 
   memcpy(output, keys, 176);
+
+  for(int j=0; j<11; j++) {
+  // printf("key");
+  // for (int i=0; i<BLOCK_SIZE; i++) {
+	  // output[i] = plaintext[i];
+    // printf("%02X ", output[(j*BLOCK_SIZE) + i]);
+  // }
+  //TODO: first key is wrong
+  // printf("\n");
+}
 
   return output;
 }
@@ -234,7 +228,7 @@ unsigned char* getRoundKey(unsigned char* keys, int round) {
 	for (int i=0; i<BLOCK_SIZE; i++) {
 		roundKey[i] = keys[(BLOCK_SIZE*round) + i];
 	}
-	
+  
 	return roundKey;
 }
 
@@ -274,7 +268,7 @@ unsigned char *aes_encrypt_block(unsigned char *plaintext, unsigned char *key) {
 	  // output[i] = plaintext[i];
     printf("%02X ", output[i]);
   }
-  printf("%ld %x\n", output, output);
+  printf("%ld %x ", output, output);
   return output;
 }
 //TODO: Fix decrypt
@@ -308,27 +302,27 @@ unsigned char *aes_decrypt_block(unsigned char *ciphertext,
   return output;
 }
 
-// int main() {
-//   unsigned char key[16] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 
-// 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F };
-// unsigned char text[16] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 
-// 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F };
-//   for (int i=0; i<BLOCK_SIZE; i++) {
-//     printf("%02X ", text[i]);
-//   }
-//   printf("\n");
-// unsigned char *eanswer = aes_encrypt_block(text, key);
-//   // for (int i=0; i<BLOCK_SIZE; i++) {
-//   //   printf("%02X ", eanswer[i]);
-//   // }
-//    printf("\n");
-// unsigned char *answer = aes_decrypt_block(eanswer, key);
-//   for (int i=0; i<BLOCK_SIZE; i++) {
-//     printf("%02X ", answer[i]);
-//   }
-//   printf("\n");
-// // for (int i=0; 1<16; i++) {
-// //   printf("%02X", answer[i]);
-// // }
-// return 0;
+int main() {
+  unsigned char key[16] = {0x00, 0x01, 0x92, 0x03, 0x04, 0x05, 0x06, 0x07, 
+0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x9D, 0x0E, 0x0F };
+unsigned char text[16] = {0x0E, 0x01, 0x32, 0x03, 0x04, 0x05, 0x06, 0x07, 
+0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x1D, 0xEE, 0x0F };
+  for (int i=0; i<BLOCK_SIZE; i++) {
+    printf("%02X ", text[i]);
+  }
+  printf("\n");
+unsigned char *eanswer = aes_encrypt_block(text, key);
+  // for (int i=0; i<BLOCK_SIZE; i++) {
+  //   printf("%02X ", eanswer[i]);
+  // }
+   printf("\n");
+unsigned char *answer = aes_decrypt_block(eanswer, key);
+  for (int i=0; i<BLOCK_SIZE; i++) {
+    printf("%02X ", answer[i]);
+  }
+  printf("\n");
+// for (int i=0; 1<16; i++) {
+//   printf("%02X", answer[i]);
 // }
+return 0;
+}
