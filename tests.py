@@ -1,6 +1,6 @@
 import unittest
 import ctypes
-from aes.aes import AES, encrypt, decrypt
+from aes import AES, encrypt, decrypt
 
 rijndael = ctypes.CDLL('./rijndael.so')
 
