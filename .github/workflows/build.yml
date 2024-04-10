@@ -11,6 +11,5 @@ jobs:
           sudo apt install -y build-essential python-is-python3
           make
       - name: Run Python tests
-        run:
-          pip install ./aes        
+        run:       
           python ./tests.py
