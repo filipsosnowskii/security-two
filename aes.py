@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+#Had to copy the aes.py from the submodule into the directory as github actions wasn't finding the aes python directory
 """
 This is an exercise in secure symmetric-key encryption, implemented in pure
 Python (no external libraries needed).

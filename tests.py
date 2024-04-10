@@ -1,7 +1,7 @@
 import unittest
 import ctypes
 import sys
-# sys.path.append("aes")
+#Had to copy the aes.py from the submodule into the directory as github actions wasn't finding the aes python directory
 from aes import AES
 
 rijndael = ctypes.CDLL('./rijndael.so')
