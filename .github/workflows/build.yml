@@ -11,5 +11,6 @@ jobs:
           sudo apt install -y build-essential python-is-python3
           make
       - name: Run Python tests
-        run: |        
+        run: |
+          export PYTHONPATH=./aes        
           python ./tests.py
