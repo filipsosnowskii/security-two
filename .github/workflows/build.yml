@@ -13,5 +13,6 @@ jobs:
       - name: Run Python tests
         run: |
           export PYTHONPATH=./aes
+          ls -R
           echo "PYTHONPATH: $PYTHONPATH"
           python ./tests.py
