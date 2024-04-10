@@ -12,5 +12,4 @@ jobs:
           make
       - name: Run Python tests
         run: |
-          touch aes/aes.py
           python ./tests.py
