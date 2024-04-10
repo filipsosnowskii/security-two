@@ -12,4 +12,6 @@ jobs:
           make
       - name: Run Python tests
         run: |
+          export PYTHONPATH=./aes/..:$PYTHONPATH
+          echo "PYTHONPATH: $PYTHONPATH"
           python ./tests.py
