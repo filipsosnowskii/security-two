@@ -12,5 +12,5 @@ jobs:
           make
       - name: Run Python tests
         run: |
-          python -m pip install .        
+          python -m pip install ./aes        
           python ./tests.py
