@@ -2,7 +2,7 @@ import unittest
 import ctypes
 import sys
 # sys.path.append("./aes")
-from aes.aes import AES
+from aes import AES
 
 rijndael = ctypes.CDLL('./rijndael.so')
 
