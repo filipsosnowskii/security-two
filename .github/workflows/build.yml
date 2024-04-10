@@ -12,4 +12,5 @@ jobs:
           make
       - name: Run Python tests
         run: |
+          ls aes
           python ./tests.py
