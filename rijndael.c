@@ -51,6 +51,8 @@ const unsigned char r_con [] = {
 /*
  * Operations used when encrypting a block
  */
+
+//substitute char with corresponding one from s_box
 void sub_bytes(unsigned char *block) {
   for (int i=0; i<BLOCK_SIZE; i++) {
     block[i] = s_box[block[i]];
@@ -58,20 +60,20 @@ void sub_bytes(unsigned char *block) {
 }
 
 void shift_rows(unsigned char *block) {
-  //shift row 1
+  //shift row 1 (by 1)
   unsigned char temp = block[4];
   block[4] = block[5];
   block[5] = block[6];
   block[6] = block[7];
   block[7] = temp;
-  //shift row 2
+  //shift row 2 (by 2)
   temp = block[8];
   block[8] = block[10];
   block[10] = temp;
   temp = block[9];
   block[9] = block[11];
   block[11] = temp;
-  //shift row 3
+  //shift row 3 (by 3)
   temp = block[12];
   block[12] = block[15];
   block[15] = block[14];
@@ -79,7 +81,7 @@ void shift_rows(unsigned char *block) {
   block[13] = temp;
 }
 
-//https://web.archive.org/web/20100626212235/http://cs.ucsb.edu/~koc/cs178/projects/JT/aes.c
+//from https://web.archive.org/web/20100626212235/http://cs.ucsb.edu/~koc/cs178/projects/JT/aes.c
 unsigned char xtime(unsigned char x) {
 	return (x & 0x80) ? ((x << 1) ^ 0x1b) : (x<<1);
 }
@@ -149,6 +151,9 @@ void add_round_key(unsigned char *block, unsigned char *round_key) {
   }
 }
 
+/*
+* Move the top char in the column to the bottom
+*/
 void rotate_word(unsigned char *key) {
 	unsigned char temp = key[0];
 	key[0] = key[1];
@@ -163,10 +168,11 @@ void rotate_word(unsigned char *key) {
  * vector, containing the 11 round keys one after the other
  */
 unsigned char *expand_key(unsigned char *cipher_key) {
-  //rotate word in first col
-  //then apply sub bytes to first col
-  //then xor with first col and r_con
-  //then to get the next column xor the previous column with the current corresponding one
+  /* To generate each key:
+  1. Rotate word in first col in previous key
+  2. Apply sub bytes to first col
+  3. XOR with first col and r_con
+  4. To get the next column xor the previous corresponding column with the current corresponding one*/
   unsigned char *output =
       (unsigned char *)malloc(sizeof(unsigned char) * 176);
   unsigned char keys[176];
@@ -204,6 +210,9 @@ unsigned char *expand_key(unsigned char *cipher_key) {
   return output;
 }
 
+/*
+* Get the corresponding key for each round
+*/
 unsigned char* getRoundKey(unsigned char* keys, int round) {
   unsigned char *roundKey =
       (unsigned char *)malloc(sizeof(unsigned char) * BLOCK_SIZE);
@@ -216,8 +225,10 @@ unsigned char* getRoundKey(unsigned char* keys, int round) {
 }
 
 /*
- * The implementations of the functions declared in the
- * header file should go here
+ * Encrypt the plain text block. This is done by:
+ * 1. Add the original key to the text
+ * 2. Perform sub_bytes, shift_rows, mix_columns and add_round_key for 9 rounds
+ * 3. Finally perform sub_bytes, shift_rows and add_round_key and return the encrypted text
  */
 unsigned char *aes_encrypt_block(unsigned char *plaintext, unsigned char *key) {
   unsigned char *output =
@@ -243,6 +254,9 @@ unsigned char *aes_encrypt_block(unsigned char *plaintext, unsigned char *key) {
   return output;
 }
 
+/*
+* Reverse order of aes_encrypt_block
+*/
 unsigned char *aes_decrypt_block(unsigned char *ciphertext,
                                  unsigned char *key) {
   unsigned char *output =
@@ -267,6 +281,10 @@ unsigned char *aes_decrypt_block(unsigned char *ciphertext,
 
   return output;
 }
+
+/*
+ * Main function for testing purposes - obsolete but shows functioning in C if necessary 
+*/
 
 // int main() {
 //  unsigned char key[16] = {0x00, 0x01, 0x92, 0x03, 0x04, 0x05, 0x06, 0x07, 

@@ -1,23 +1,10 @@
 import unittest
 import ctypes
-# from parametrized import parameterized 
-# import sys
 #Had to copy the aes.py from the submodule into the directory as github actions wasn't finding the aes python directory
 from aes import AES
-# import pytest 
 
 rijndael = ctypes.CDLL('./rijndael.so')
 
-# buffer = b'\x00\x01\x02\x03\x04\x05\x06\x07'
-# buffer += b'\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F'
-# block = ctypes.create_string_buffer(buffer) 
-
-# key_buffer = b'\x00\x01\x02\x03\x04\x05\x06\x07'
-# key_buffer += b'\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F'
-# key = ctypes.create_string_buffer(key_buffer)
-
-# block2 = b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F'
-# key2 = b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F'
 
 block1 = b'\x6f\xf2\xb6\x0f\x3e\xae\xf3\xe0\xe4\x0f\x3c\xfe\x43\x20\x27\xe4'
 block2 = b'\x9c\x83\x55\x07\x84\xcb\x00\xd3\xb7\xfe\x69\xcd\x3a\x5c\x44\x5d'
@@ -35,29 +22,6 @@ key3_c = ctypes.create_string_buffer(key3)
 
 
 class TestBlock(unittest.TestCase):
-
-            # def test_aes_encrypt_and_decrypt(block, key, block_c, key_c):
-            #     rijndael.aes_encrypt_block.restype = ctypes.c_void_p
-            #     rijndael.aes_decrypt_block.restype = ctypes.c_void_p
-            #     encryptedTextC = ctypes.string_at(rijndael.aes_encrypt_block(block_c, key_c), 16)
-            #     encryptedTextPython = AES(bytes(key)).encrypt_block(bytes(block))
-            #     # Code below commented out as cyphertexts don't equal each other - printing the 
-            #     # Python cyphertext shows it has unusual characters like '>' or '`'. This seems 
-            #     # to be some conversion error I can't figure out
-            #     # print(encryptedTextPython)
-            #     # print(encryptedTextC)
-            #     # self.assertEqual(encryptedTextC.hex(), encryptedTextPython.hex())
-            #     decryptedTextC = ctypes.string_at(rijndael.aes_decrypt_block(encryptedTextC, key_c), 16)
-            #     decryptedTextPython = AES(bytes(key)).decrypt_block(bytes(encryptedTextPython))
-            #     # self.assertEqual(decryptedTextC, decryptedTextPython)
-            #     return decryptedTextC, decryptedTextPython
-
-            # # @pytest.mark.parametrize("block, key, block_c, key_c", [(block1, key1, block1_c, key1_c), (block1, key1, block1_c, key1_c)])
-            # def run_tests(self, block, key, block_c, key_c):
-            #     tests = [(block1, key1, block1_c, key1_c), (block2, key2, block2_c, key2_c), (block3, key3, block3_c, key3_c)]
-            #     for block, key, block_c, key_c in tests:
-            #           decryptedTextC, decryptedTextPython = test_aes_encrypt_and_decrypt(block=block, key=key, block_c=block_c, key_c=key_c)
-            #           self.assertEqual(decryptedTextC, decryptedTextPython)
 
 
         def test_aes_encrypt_and_decrypt1(self):
