@@ -1,1 +1,2 @@
-hex
+                print(encryptedTextPython)
+                print(encryptedTextC)
