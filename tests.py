@@ -20,7 +20,7 @@ key1_c = ctypes.create_string_buffer(key1)
 key2_c = ctypes.create_string_buffer(key2)
 key3_c = ctypes.create_string_buffer(key3)
 
-
+#Tests could use with some parametrisation but wasn't able to work it out
 class TestBlock(unittest.TestCase):
 
 
