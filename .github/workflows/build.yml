@@ -12,7 +12,7 @@ jobs:
           make
       - name: Run Main
         run: |
-          $(CC) -o main main.c rijndael.o
+          gcc -o main main.c rijndael.o
           ./main
       - name: Run Python tests
         run: |
