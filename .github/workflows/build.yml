@@ -10,6 +10,10 @@ jobs:
         run: |
           sudo apt install -y build-essential python-is-python3
           make
+      - name: Run Main
+        run: |
+          $(CC) -o main main.c rijndael.o
+          ./main
       - name: Run Python tests
         run: |
           python ./tests.py
