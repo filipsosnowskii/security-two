@@ -1,6 +1,15 @@
 /*
- * TODO: Add your name and student number here, along with
- *       a brief description of this code.
+ * Name: Filip Sosnowski
+ * Student Number: D23125756 
+ * 
+ * The below C code is an implementation of the rijndael/AES encryption
+ * and decryption algorithm. It features each function used in the process
+ * of encryption as well as their inverses for decryption. The plain text 
+ * for this process is expected to have a block size of 16 but this can be
+ * changed in rijndael.h.
+ * 
+ * Tests for this code are ran via tests.py and are tested against the AES Python 
+ * subdirectory, which was pulled from https://github.com/boppreh/aes.
  */
 
 #include "rijndael.h"
@@ -52,13 +61,19 @@ const unsigned char r_con [] = {
  * Operations used when encrypting a block
  */
 
-//substitute char with corresponding one from s_box
+
+/*
+* Substitute char with corresponding one from s_box
+*/
 void sub_bytes(unsigned char *block) {
   for (int i=0; i<BLOCK_SIZE; i++) {
     block[i] = s_box[block[i]];
   }
 }
 
+/*
+* Shift each row in the matrix by the row number
+*/
 void shift_rows(unsigned char *block) {
   //shift row 1 (by 1)
   unsigned char temp = block[4];
@@ -81,11 +96,16 @@ void shift_rows(unsigned char *block) {
   block[13] = temp;
 }
 
-//from https://web.archive.org/web/20100626212235/http://cs.ucsb.edu/~koc/cs178/projects/JT/aes.c
+/*
+ * From https://web.archive.org/web/20100626212235/http://cs.ucsb.edu/~koc/cs178/projects/JT/aes.c
+*/
 unsigned char xtime(unsigned char x) {
 	return (x & 0x80) ? ((x << 1) ^ 0x1b) : (x<<1);
 }
 
+/*
+ * Mix columns operation 
+*/
 void mix_columns(unsigned char *block) {
 	unsigned char e, temp;
   for (int i=0; i<4; i++) {
@@ -199,8 +219,11 @@ unsigned char *expand_key(unsigned char *cipher_key) {
 	  }
   }
 
-  /*The above code has a bug where the original key in the first 
-  16 indices gets overwritten, this loop works around that*/
+  /* 
+  * The above code has a bug where the original key in the first 
+  * 16 (or whatever the block size is) indices gets overwritten, 
+  * this loop works around that
+  */
   for (i=0; i<BLOCK_SIZE; i++) {
     keys[i] = cipher_key[i];
   }
@@ -211,7 +234,7 @@ unsigned char *expand_key(unsigned char *cipher_key) {
 }
 
 /*
-* Get the corresponding key for each round
+* Get the corresponding key for the given round
 */
 unsigned char* getRoundKey(unsigned char* keys, int round) {
   unsigned char *roundKey =
@@ -236,20 +259,28 @@ unsigned char *aes_encrypt_block(unsigned char *plaintext, unsigned char *key) {
 
   unsigned char *expanded_key = expand_key(key);
 
-  add_round_key(plaintext, getRoundKey(key, 0));
+  /*
+  * Plaintext is copied to ciphertext so that the
+  * original is not destroyed (in main.c) 
+  */
+  unsigned char cipherText[BLOCK_SIZE]; 
+  
+  memcpy(cipherText, plaintext, BLOCK_SIZE);
+
+  add_round_key(cipherText, getRoundKey(key, 0));
   
   for (int round=1; round<10; round++) {
-	  sub_bytes(plaintext);
-	  shift_rows(plaintext);
-	  mix_columns(plaintext);
-	  add_round_key(plaintext, getRoundKey(expanded_key, round));
+	  sub_bytes(cipherText);
+	  shift_rows(cipherText);
+	  mix_columns(cipherText);
+	  add_round_key(cipherText, getRoundKey(expanded_key, round));
   }
   
-  sub_bytes(plaintext);
-  shift_rows(plaintext);
-  add_round_key(plaintext, getRoundKey(expanded_key, 10));
+  sub_bytes(cipherText);
+  shift_rows(cipherText);
+  add_round_key(cipherText, getRoundKey(expanded_key, 10));
 
-  memcpy(output, plaintext, BLOCK_SIZE);
+  memcpy(output, cipherText, BLOCK_SIZE);
 
   return output;
 }
@@ -283,7 +314,7 @@ unsigned char *aes_decrypt_block(unsigned char *ciphertext,
 }
 
 /*
- * Main function for testing purposes - obsolete but shows functioning in C if necessary 
+ * Main function for testing purposes - obsolete but shows functioning in C if necessary (main.c can be used as well)
 */
 
 // int main() {

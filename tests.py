@@ -30,10 +30,11 @@ class TestBlock(unittest.TestCase):
                 encryptedTextC = ctypes.string_at(rijndael.aes_encrypt_block(block1_c, key1_c), 16)
                 encryptedTextPython = AES(bytes(key1)).encrypt_block(bytes(block1))
                 # Code below commented out as cyphertexts don't equal each other - printing the 
-                # Python cyphertext shows it has unusual characters like '>' or '`'. This seems 
-                # to be some conversion error I can't figure out
+                # Python cyphertext shows it has unusual characters like '>' or '`'. My guess is 
+                # it's some conversion problem I can't figure out
                 # print(encryptedTextPython)
                 # print(encryptedTextC)
+                # self.assertEqual(encryptedTextC, encryptedTextPython)
                 # self.assertEqual(encryptedTextC.hex(), encryptedTextPython.hex())
                 decryptedTextC = ctypes.string_at(rijndael.aes_decrypt_block(encryptedTextC, key1_c), 16)
                 decryptedTextPython = AES(bytes(key1)).decrypt_block(bytes(encryptedTextPython))
